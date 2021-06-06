@@ -15,6 +15,34 @@ const config = {
   appId: "1:1047025421602:web:9ba709bdc5368dbe89e97b",
 };
 
+/**
+ * Checks and creates a new user profile in the database.
+ * @param {*} userAuth user auth object
+ * @param {*} additionalData object containing additional data to add to the profile
+ * @returns firestore user document reference. Void if user auth doesn't exist
+ */
+export const createUserProfileDocument = async (userAuth, additionalData) => {
+  if (!userAuth) return;
+
+  // get the document reference and generate the snapshot.
+  const userRef = firestore.doc(`users/${userAuth.uid}`);
+  const snapshot = await userRef.get();
+
+  // if exists of the snapshot returns false, profile does not exist; create new.
+  if (!snapshot.exists) {
+    const { displayName, email } = userAuth;
+    const createdAt = new Date();
+
+    try {
+      await userRef.set({ displayName, email, createdAt, ...additionalData });
+    } catch (error) {
+      console.log("error creating user", error.message);
+    }
+  }
+
+  return userRef;
+};
+
 // Initialize Firebase
 firebase.initializeApp(config);
 
